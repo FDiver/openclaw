@@ -34,6 +34,7 @@ import {
   DREAMING_SESSION_INGESTION_FILES_NAMESPACE,
   DREAMING_SESSION_INGESTION_SEEN_NAMESPACE,
   SESSION_SEEN_HASHES_PER_CHUNK,
+  normalizeMemoryCoreWorkspaceKey,
   readMemoryCoreWorkspaceEntries,
   writeMemoryCoreWorkspaceEntries,
 } from "./dreaming-state.js";
@@ -542,11 +543,6 @@ type SessionIngestionCollectionResult = {
   changed: boolean;
 };
 
-function normalizeWorkspaceKey(workspaceDir: string): string {
-  const resolved = path.resolve(workspaceDir).replace(/\\/g, "/");
-  return process.platform === "win32" ? resolved.toLowerCase() : resolved;
-}
-
 export function normalizeSessionIngestionState(raw: unknown): SessionIngestionState {
   const record = asRecord(raw);
   const filesRaw = asRecord(record?.files);
@@ -749,7 +745,7 @@ function resolveSessionAgentsForWorkspace(params: {
   if (!cfg) {
     return [];
   }
-  const target = normalizeWorkspaceKey(workspaceDir);
+  const target = normalizeMemoryCoreWorkspaceKey(workspaceDir);
   const workspaces = resolveMemoryDreamingWorkspaces(
     cfg as Parameters<typeof resolveMemoryDreamingWorkspaces>[0],
     {
@@ -757,7 +753,9 @@ function resolveSessionAgentsForWorkspace(params: {
       primaryAgentId: "main",
     },
   );
-  const match = workspaces.find((entry) => normalizeWorkspaceKey(entry.workspaceDir) === target);
+  const match = workspaces.find(
+    (entry) => normalizeMemoryCoreWorkspaceKey(entry.workspaceDir) === target,
+  );
   if (!match) {
     return [];
   }
@@ -1756,6 +1754,7 @@ async function runLightDreaming(params: {
         data,
         nowMs,
         timezone: params.config.timezone,
+        language: params.config.language,
         model: params.config.execution?.model,
         logger: params.logger,
       });
@@ -1766,6 +1765,7 @@ async function runLightDreaming(params: {
         data,
         nowMs,
         timezone: params.config.timezone,
+        language: params.config.language,
         model: params.config.execution?.model,
         logger: params.logger,
       });
@@ -1871,6 +1871,7 @@ async function runRemDreaming(params: {
         data,
         nowMs,
         timezone: params.config.timezone,
+        language: params.config.language,
         model: params.config.execution?.model,
         logger: params.logger,
       });
@@ -1881,6 +1882,7 @@ async function runRemDreaming(params: {
         data,
         nowMs,
         timezone: params.config.timezone,
+        language: params.config.language,
         model: params.config.execution?.model,
         logger: params.logger,
       });
